@@ -4,6 +4,7 @@ export default defineConfig({
   root: '.',
   server: {
     port: parseInt(process.env.VITE_PORT || '5173'),
+    strictPort: true,  // Fail if port is in use instead of trying alternatives
     open: false,
     host: true,
     proxy: {

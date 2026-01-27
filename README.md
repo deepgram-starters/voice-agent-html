@@ -47,15 +47,25 @@ pnpm install
 
 ### Development Mode
 
-Start the Vite dev server:
+**Option 1: With Backend (Recommended)**
+
+When using with a backend like [node-voice-agent](https://github.com/deepgram-starters/node-voice-agent):
+
+- **Access the app at:** `http://localhost:8080` (backend port)
+- The backend proxies to Vite on port 5173 for HMR
+- Users should NEVER access `http://localhost:5173` directly
+
+The frontend's `vite.config.js` has `strictPort: true`, so Vite will fail if port 5173 is in use rather than switching to an alternative port (which would break the backend proxy).
+
+**Option 2: Standalone (Development Only)**
+
+To run the frontend standalone for UI development:
 
 ```bash
 pnpm dev
 ```
 
-This runs on `http://localhost:5173` by default.
-
-**Important:** You must also run a backend server that implements the Voice Agent WebSocket endpoint. The Vite config proxies `/agent` and `/metadata` requests to `http://localhost:8080`.
+This runs on `http://localhost:5173` and proxies `/agent` and `/metadata` requests to `http://localhost:8080`.
 
 To change the backend URL, edit `vite.config.js`:
 
@@ -84,13 +94,14 @@ pnpm preview
 
 ## Integration Patterns
 
-### Pattern 1: Separate Frontend/Backend (Development)
+### Pattern 1: Backend Proxies to Frontend (Development)
 
-**Best for:** Active development with HMR
+**Best for:** Active development with HMR (used by node-voice-agent)
 
-- Frontend (Vite): `http://localhost:5173`
-- Backend: `http://localhost:8080`
-- Vite proxies API requests to backend
+- Backend: `http://localhost:8080` ← **Users access this URL only**
+- Frontend (Vite): `http://localhost:5173` (internal, proxied by backend)
+- Backend proxies all requests to Vite for HMR
+- Vite proxies API routes (`/agent`, `/metadata`) back to backend
 
 ### Pattern 2: Backend Serves Frontend (Production)
 
