@@ -3,11 +3,16 @@ node_modules/
 .pnp
 .pnp.js
 
+# Lock files (project uses pnpm)
+package-lock.json
+yarn.lock
+
 # Build output
 dist/
 
-# Development
-.DS_Store
+# Environment
+.env
+.env.local
 *.local
 
 # Logs
@@ -23,3 +28,14 @@ pnpm-debug.log*
 *.swp
 *.swo
 *~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+
+# Temporary files
+*.tmp
+.cache/
