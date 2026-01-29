@@ -14,7 +14,7 @@ export default defineConfig({
         ws: true,
         changeOrigin: true
       },
-      '/metadata': {
+      '/api/metadata': {
         target: 'http://localhost:8080',
         changeOrigin: true
       }
