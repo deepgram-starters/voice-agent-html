@@ -3,22 +3,10 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: '.',
   server: {
-    port: parseInt(process.env.VITE_PORT || '8081'),
-    strictPort: true,  // Fail if port is in use instead of trying alternatives
+    port: parseInt(process.env.VITE_PORT || '8080'),
+    strictPort: true,
     open: false,
-    host: true,
-    proxy: {
-      // Proxy WebSocket and API routes back to backend
-      '/agent': {
-        target: 'http://localhost:8080',
-        ws: true,
-        changeOrigin: true
-      },
-      '/api/metadata': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
-      }
-    }
+    host: true
   },
   preview: {
     port: 4173,
