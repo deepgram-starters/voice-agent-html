@@ -10,13 +10,6 @@
  */
 
 // ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-const BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT || '8081';
-const API_BASE_URL = `http://localhost:${BACKEND_PORT}`;
-
-// ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
 
@@ -160,7 +153,7 @@ function initializeEventListeners() {
 
 async function loadMetadata() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/metadata`);
+    const response = await fetch('/api/metadata');
     if (!response.ok) {
       console.warn('Failed to load metadata, using defaults');
       return;
@@ -277,7 +270,7 @@ async function connect() {
   try {
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//localhost:${BACKEND_PORT}/agent/converse`;
+    const wsUrl = `${protocol}//${window.location.host}/api/voice-agent`;
 
     state.ws = new WebSocket(wsUrl);
     state.ws.binaryType = 'arraybuffer';
