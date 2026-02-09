@@ -13,6 +13,16 @@
 // STATE MANAGEMENT
 // ============================================================================
 
+/**
+ * Computes the base path from the current page URL.
+ * Ensures a trailing slash so relative paths resolve correctly under subpath deployments.
+ */
+function getBasePath() {
+  let path = window.location.pathname;
+  if (!path.endsWith('/')) path += '/';
+  return path;
+}
+
 const state = {
   ws: null,
   isConnected: false,
@@ -153,7 +163,7 @@ function initializeEventListeners() {
 
 async function loadMetadata() {
   try {
-    const response = await fetch('/api/metadata');
+    const response = await fetch(getBasePath() + 'api/metadata');
     if (!response.ok) {
       console.warn('Failed to load metadata, using defaults');
       return;
@@ -270,7 +280,7 @@ async function connect() {
   try {
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/api/voice-agent`;
+    const wsUrl = `${protocol}//${window.location.host}${getBasePath()}api/voice-agent`;
 
     state.ws = new WebSocket(wsUrl);
     state.ws.binaryType = 'arraybuffer';
