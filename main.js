@@ -23,6 +23,33 @@ function getBasePath() {
   return path;
 }
 
+// ============================================================================
+// SESSION MANAGEMENT
+// ============================================================================
+
+const SESSION_ENDPOINT = getBasePath() + 'api/session';
+let sessionToken = null;
+
+function getPageNonce() {
+  const meta = document.querySelector('meta[name="session-nonce"]');
+  return meta ? meta.content : null;
+}
+
+async function getSessionToken() {
+  if (sessionToken) return sessionToken;
+  const nonce = getPageNonce();
+  const headers = nonce ? { 'X-Session-Nonce': nonce } : {};
+  const response = await fetch(SESSION_ENDPOINT, { headers });
+  if (!response.ok) throw new Error(`Session failed: ${response.status}`);
+  const data = await response.json();
+  sessionToken = data.token;
+  return sessionToken;
+}
+
+// ============================================================================
+// STATE MANAGEMENT (continued)
+// ============================================================================
+
 const state = {
   ws: null,
   isConnected: false,
@@ -278,11 +305,14 @@ async function connect() {
   elements.connectBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
 
   try {
-    // Connect to WebSocket
+    // Get session token for WebSocket auth
+    const token = await getSessionToken();
+
+    // Connect to WebSocket with JWT auth via subprotocol
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}${getBasePath()}api/voice-agent`;
 
-    state.ws = new WebSocket(wsUrl);
+    state.ws = new WebSocket(wsUrl, [`access_token.${token}`]);
     state.ws.binaryType = 'arraybuffer';
 
     state.ws.onopen = handleWebSocketOpen;
@@ -419,6 +449,17 @@ function handleBinaryAudio(arrayBuffer) {
 
 function handleWebSocketClose(event) {
   console.log('WebSocket closed:', event.code, event.reason);
+
+  // Handle session expiry
+  if (event.code === 4401) {
+    sessionToken = null;
+    addSystemMessage('Session expired, please refresh the page.', 'error');
+    showError('Session expired, please refresh the page.');
+    updateConnectionStatus(false);
+    updateMicrophoneStatus(false);
+    return;
+  }
+
   disconnect();
 }
 
