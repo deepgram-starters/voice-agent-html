@@ -10,24 +10,10 @@
  */
 
 // ============================================================================
-// STATE MANAGEMENT
-// ============================================================================
-
-/**
- * Computes the base path from the current page URL.
- * Ensures a trailing slash so relative paths resolve correctly under subpath deployments.
- */
-function getBasePath() {
-  let path = window.location.pathname;
-  if (!path.endsWith('/')) path += '/';
-  return path;
-}
-
-// ============================================================================
 // SESSION MANAGEMENT
 // ============================================================================
 
-const SESSION_ENDPOINT = getBasePath() + 'api/session';
+const SESSION_ENDPOINT = 'api/session';
 let sessionToken = null;
 
 function getPageNonce() {
@@ -190,7 +176,7 @@ function initializeEventListeners() {
 
 async function loadMetadata() {
   try {
-    const response = await fetch(getBasePath() + 'api/metadata');
+    const response = await fetch('api/metadata');
     if (!response.ok) {
       console.warn('Failed to load metadata, using defaults');
       return;
@@ -309,10 +295,10 @@ async function connect() {
     const token = await getSessionToken();
 
     // Connect to WebSocket with JWT auth via subprotocol
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}${getBasePath()}api/voice-agent`;
+    const wsUrl = new URL('api/voice-agent', document.baseURI);
+    wsUrl.protocol = wsUrl.protocol === 'https:' ? 'wss:' : 'ws:';
 
-    state.ws = new WebSocket(wsUrl, [`access_token.${token}`]);
+    state.ws = new WebSocket(wsUrl.href, [`access_token.${token}`]);
     state.ws.binaryType = 'arraybuffer';
 
     state.ws.onopen = handleWebSocketOpen;
