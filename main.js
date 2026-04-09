@@ -44,8 +44,8 @@ const state = {
     sessionStart: null,
   },
   config: {
-    listenModel: 'nova-2',
-    speakModel: 'aura-asteria-en',
+    listenModel: 'nova-3',
+    speakModel: 'aura-2-thalia-en',
     thinkModel: 'gpt-4o-mini',
     systemPrompt: 'You are a helpful assistant.',
   },
@@ -417,13 +417,9 @@ function handleBinaryAudio(arrayBuffer) {
   state.stats.audioChunks++;
   updateStats();
 
-  // Queue audio for playback
+  // Queue audio and schedule gapless playback
   state.audioQueue.push(arrayBuffer);
-
-  // Start playback if not already playing
-  if (!state.isPlaying) {
-    playNextAudio();
-  }
+  drainAudioQueue();
 }
 
 function handleWebSocketClose(event) {
@@ -457,7 +453,7 @@ function sendSettings() {
       },
       output: {
         encoding: 'linear16',
-        sample_rate: 16000,
+        sample_rate: 24000,
       },
     },
     agent: {
@@ -562,6 +558,7 @@ function disconnect() {
   state.isConnected = false;
   state.audioQueue = [];
   state.isPlaying = false;
+  nextPlayTime = 0;
   state.originalConfig = null;
   state.hasUnsavedChanges = false;
   state.stats = {
@@ -606,41 +603,37 @@ function disconnect() {
 
 async function initializeAudioContext() {
   if (!state.audioContext) {
-    state.audioContext = new (window.AudioContext || window.webkitAudioContext)({
-      sampleRate: 16000,
-    });
+    state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 }
 
-async function playNextAudio() {
-  if (state.audioQueue.length === 0) {
-    state.isPlaying = false;
-    return;
-  }
+let nextPlayTime = 0;
 
+async function drainAudioQueue() {
+  if (state.isPlaying) return;
   state.isPlaying = true;
-  const arrayBuffer = state.audioQueue.shift();
 
-  try {
-    if (!state.audioContext) {
-      await initializeAudioContext();
+  while (state.audioQueue.length > 0) {
+    const arrayBuffer = state.audioQueue.shift();
+    try {
+      if (!state.audioContext) await initializeAudioContext();
+
+      const audioBuffer = await arrayBufferToAudioBuffer(arrayBuffer);
+      const source = state.audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(state.audioContext.destination);
+
+      // Schedule gapless: each chunk starts exactly when the previous ends
+      const now = state.audioContext.currentTime;
+      if (nextPlayTime < now) nextPlayTime = now;
+      source.start(nextPlayTime);
+      nextPlayTime += audioBuffer.duration;
+    } catch (error) {
+      console.error('Audio playback error:', error);
     }
-
-    // Convert ArrayBuffer to AudioBuffer
-    const audioBuffer = await arrayBufferToAudioBuffer(arrayBuffer);
-
-    // Play the audio
-    const source = state.audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(state.audioContext.destination);
-    source.onended = () => playNextAudio();
-    source.start(0);
-
-  } catch (error) {
-    console.error('Audio playback error:', error);
-    // Continue with next audio
-    playNextAudio();
   }
+
+  state.isPlaying = false;
 }
 
 async function arrayBufferToAudioBuffer(arrayBuffer) {
@@ -649,7 +642,7 @@ async function arrayBufferToAudioBuffer(arrayBuffer) {
   const audioBuffer = state.audioContext.createBuffer(
     1, // mono
     pcm16.length,
-    16000 // sample rate
+    24000 // sample rate
   );
 
   const channelData = audioBuffer.getChannelData(0);
@@ -704,10 +697,12 @@ async function startMicrophone() {
 
       const inputData = e.inputBuffer.getChannelData(0);
 
-      // Convert float32 to int16
-      const pcm16 = new Int16Array(inputData.length);
-      for (let i = 0; i < inputData.length; i++) {
-        const s = Math.max(-1, Math.min(1, inputData[i]));
+      // Downsample from AudioContext sample rate to 16000 Hz and convert to int16
+      const ratio = state.audioContext.sampleRate / 16000;
+      const outputLength = Math.floor(inputData.length / ratio);
+      const pcm16 = new Int16Array(outputLength);
+      for (let i = 0; i < outputLength; i++) {
+        const s = Math.max(-1, Math.min(1, inputData[Math.floor(i * ratio)]));
         pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
       }
 
