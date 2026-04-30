@@ -463,7 +463,7 @@ function sendSettings() {
           version: state.config.listenModel.startsWith('flux') ? 'v2' : 'v1',
           model: state.config.listenModel,
           ...(state.config.listenModel === 'flux-general-multi' && {
-            language_hints: ['en', 'es'],
+            language_hint: ['en', 'es'],
           }),
         },
       },
