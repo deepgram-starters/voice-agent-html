@@ -44,8 +44,8 @@ const state = {
     sessionStart: null,
   },
   config: {
-    listenModel: 'nova-3',
-    speakModel: 'aura-2-thalia-en',
+    listenModel: 'flux-general-multi',
+    speakModel: 'aura-2-carina-es',
     thinkModel: 'gpt-4o-mini',
     systemPrompt: 'You are a helpful assistant.',
   },
@@ -460,8 +460,11 @@ function sendSettings() {
       listen: {
         provider: {
           type: 'deepgram',
-          version: 'v1',
+          version: state.config.listenModel.startsWith('flux') ? 'v2' : 'v1',
           model: state.config.listenModel,
+          ...(state.config.listenModel === 'flux-general-multi' && {
+            language_hints: ['en', 'es'],
+          }),
         },
       },
       speak: {
