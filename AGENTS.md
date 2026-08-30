@@ -1,5 +1,8 @@
 # voice-agent-html
 
+Instructions for AI coding agents working in this repository. Read this file
+before writing any code.
+
 Shared browser frontend for the Deepgram voice-agent starter family. It is
 consumed as a git submodule (mounted at `frontend/`) by the backend starters
 in the `deepgram-starters` organization — for example `node-voice-agent` and
@@ -41,6 +44,13 @@ running application.
 | `pnpm: command not found` | corepack not enabled | `corepack enable`, or prefix commands with `corepack pnpm` |
 | Page loads but connecting fails | no backend running on port 8081 | start the parent starter (`make start` in its repository); this repo is not standalone |
 | Edits vanish after committing in the parent starter | changes were made in the parent's `frontend/` working copy without committing in the submodule | commit and push inside `frontend/` first, then update the submodule pointer in the parent |
+
+## Live documentation and machine-readable surfaces
+
+- Documentation: https://developers.deepgram.com — append `.md` to any docs
+  page URL to get clean Markdown.
+- Agent index of all documentation: https://developers.deepgram.com/llms.txt
+- API status (machine-readable): https://status.deepgram.com/api/v2/status.json
 
 ## Conventional Commits
 
