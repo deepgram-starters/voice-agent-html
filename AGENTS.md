@@ -19,6 +19,8 @@ in the `deepgram-starters` organization — for example `node-voice-agent` and
 
 ## Install, run, and test headlessly
 
+Requires Node.js `^20.19.0 || >=22.12.0`.
+
 ```bash
 corepack pnpm install     # install (corepack supplies the pinned pnpm 10)
 corepack pnpm run build   # production build into dist/ — the headless check
@@ -34,7 +36,7 @@ running application.
 
 | Package | Declared | Notes |
 |---------|----------|-------|
-| `vite` | `^7.3.2` | dev dependency; the only dependency tree of size |
+| `vite` | `^7.3.5` | dev dependency; the only dependency tree of size |
 | `@deepgram/styles` | `latest` | shared design tokens and CSS |
 
 ## Common failure modes
