@@ -443,6 +443,10 @@ function handleWebSocketError(error) {
   showError('WebSocket connection error');
 }
 
+function listenProviderVersion(model) {
+  return model.startsWith('flux-') ? 'v2' : 'v1';
+}
+
 function sendSettings() {
   const settingsMessage = {
     type: 'Settings',
@@ -460,7 +464,7 @@ function sendSettings() {
       listen: {
         provider: {
           type: 'deepgram',
-          version: state.config.listenModel.startsWith('flux') ? 'v2' : 'v1',
+          version: listenProviderVersion(state.config.listenModel),
           model: state.config.listenModel,
           ...(state.config.listenModel === 'flux-general-multi' && {
             language_hint: ['en', 'es'],
