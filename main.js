@@ -431,10 +431,9 @@ function handleWebSocketClose(event) {
   // Handle session expiry
   if (event.code === 4401) {
     sessionToken = null;
+    disconnect();
     addSystemMessage('Session expired, please refresh the page.', 'error');
     showError('Session expired, please refresh the page.');
-    updateConnectionStatus(false);
-    updateMicrophoneStatus(false);
     return;
   }
 
@@ -557,6 +556,9 @@ function disconnect() {
     state.mediaStream.getTracks().forEach(track => track.stop());
     state.mediaStream = null;
   }
+
+  // Stop scheduled playback before closing the audio context.
+  stopPlayback();
 
   // Close audio context
   if (state.audioContext) {
