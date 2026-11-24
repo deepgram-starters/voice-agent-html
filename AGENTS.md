@@ -32,11 +32,11 @@ succeeding is the headless validation. Conformance tests live in the backend
 starters (`make test` there), which exercise this frontend through the
 running application.
 
-## Versions (as of 2026-08-24)
+## Versions (as of 2026-11-24)
 
 | Package | Declared | Notes |
 |---------|----------|-------|
-| `vite` | `^7.3.5` | dev dependency; the only dependency tree of size |
+| `vite` | `^8.3.8` | dev dependency; the only dependency tree of size |
 | `@deepgram/styles` | `0.2.15` | shared design tokens and CSS |
 
 ## Common failure modes
