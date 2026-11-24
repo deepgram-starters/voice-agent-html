@@ -37,6 +37,7 @@ const state = {
   audioProcessor: null,
   audioQueue: [],
   isPlaying: false,
+  scheduledSources: new Set(),
   stats: {
     messagesSent: 0,
     messagesReceived: 0,
@@ -357,6 +358,8 @@ function handleJSONMessage(message) {
       break;
 
     case 'UserStartedSpeaking':
+      // Barge-in: drop agent audio that is already scheduled ahead.
+      stopPlayback();
       updateAgentState('Listening...');
       break;
 
@@ -428,10 +431,9 @@ function handleWebSocketClose(event) {
   // Handle session expiry
   if (event.code === 4401) {
     sessionToken = null;
+    disconnect();
     addSystemMessage('Session expired, please refresh the page.', 'error');
     showError('Session expired, please refresh the page.');
-    updateConnectionStatus(false);
-    updateMicrophoneStatus(false);
     return;
   }
 
@@ -555,6 +557,9 @@ function disconnect() {
     state.mediaStream = null;
   }
 
+  // Stop scheduled playback before closing the audio context.
+  stopPlayback();
+
   // Close audio context
   if (state.audioContext) {
     state.audioContext.close();
@@ -635,12 +640,26 @@ async function drainAudioQueue() {
       if (nextPlayTime < now) nextPlayTime = now;
       source.start(nextPlayTime);
       nextPlayTime += audioBuffer.duration;
+
+      state.scheduledSources.add(source);
+      source.onended = () => state.scheduledSources.delete(source);
     } catch (error) {
       console.error('Audio playback error:', error);
     }
   }
 
   state.isPlaying = false;
+}
+
+// Stop and discard all queued and scheduled agent audio.
+function stopPlayback() {
+  state.audioQueue = [];
+  for (const source of state.scheduledSources) {
+    source.onended = null;
+    source.stop();
+  }
+  state.scheduledSources.clear();
+  nextPlayTime = 0;
 }
 
 async function arrayBufferToAudioBuffer(arrayBuffer) {
